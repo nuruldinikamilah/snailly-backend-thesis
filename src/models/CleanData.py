@@ -1,0 +1,26 @@
+from src.server.main import db,main_app
+from src.config.database import generateDatabase
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import ARRAY
+class clean_data(db.Model):
+  __tablename__ = 'clean_data'
+  
+  clean_data_id = db.Column(db.Integer, primary_key=True)
+  child_id = db.Column(db.String(255), nullable=False)
+  parent_id = db.Column(db.String(255), nullable=False)
+  url = db.Column(db.String(255), unique=True)
+  text = db.Column(db.Text, nullable=False)
+  stopword_removed_tokens =  db.Column(JSON, nullable=False)
+  raw_text = db.Column(db.Text, nullable=False)
+  link_gambar = db.Column(db.Text)
+  folder_gambar = db.Column(db.Text)
+
+  def __init__(self, child_id, parent_id, url, text, raw_text, stopword_removed_tokens, link_gambar, folder_gambar):
+    self.child_id = child_id
+    self.parent_id = parent_id
+    self.url = url
+    self.text = text
+    self.raw_text = raw_text
+    self.stopword_removed_tokens = stopword_removed_tokens
+    self.link_gambar = link_gambar
+    self.folder_gambar = folder_gambar
