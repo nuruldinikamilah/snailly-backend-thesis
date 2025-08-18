@@ -14,28 +14,38 @@ hitlService = HITLService()
 def test():
     return Response.success([],"Test post endpoint is working")
 
+
+@MainApp.route('/predict',methods=['POST'])
+def predict_data():
+    data = request.json
+    result = predictDataService.createPredictData(data)
+    if(result['status'] == 'failed'):
+        return Response.error(result['data'],result['code'])
+    return Response.success(result['data'],"success predict data")
+
 @MainApp.route('/scrapping', methods=['POST'])
 def clean_data():
     data = request.json
     url = data.get('url')
     parent_id = data.get('parent_id')
     child_id = data.get('child_id')
-
+    token = data.get('token')
     result = cleanDataService.createCleanData({
         "url": url,
         "parent_id": parent_id,
-        "child_id": child_id
+        "child_id": child_id,
+        "token": token
     })
     if(result['status'] == 'failed'):
         return Response.error(result['data'],result['code'])
-    return Response.success(result['data'],"success create new event")
+    return Response.success(result['data'],"success predict url")
 
 @MainApp.route('/retrain', methods=['POST'])
 def retrain_model():
     result = predictDataService.createRetrainModel()
     if(result['status'] == 'failed'):
         return Response.error(result['data'],result['code'])
-    return Response.success(result['data'],"success create retrain model")
+    return Response.success(result['data'],"success retrain model")
 
 @MainApp.route('/update-label', methods=['PUT'])
 def update_label():
@@ -47,3 +57,10 @@ def update_label():
     if(result['status'] == 'failed'):
         return Response.error(result['data'],result['code'])
     return Response.success(result['data'],"success update label")
+
+@MainApp.route('/seed-dataset', methods=['POST'])
+def seed_dataset():
+    result = hitlService.createSeedDataset()
+    if(result['status'] == 'failed'):
+        return Response.error(result['data'],result['code'])
+    return Response.success(result['data'],"success create seed dataset")

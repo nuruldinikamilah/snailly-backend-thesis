@@ -1,8 +1,8 @@
 """update
 
-Revision ID: f624264f3c00
+Revision ID: ca298ed4b1e5
 Revises: 
-Create Date: 2025-08-12 00:44:59.529743
+Create Date: 2025-08-14 09:43:17.911953
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'f624264f3c00'
+revision = 'ca298ed4b1e5'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('clean_data_id', sa.Integer(), nullable=False),
     sa.Column('child_id', sa.String(length=255), nullable=False),
     sa.Column('parent_id', sa.String(length=255), nullable=False),
-    sa.Column('url', sa.String(length=255), nullable=True),
+    sa.Column('url', sa.Text(), nullable=True),
     sa.Column('text', sa.Text(), nullable=False),
     sa.Column('stopword_removed_tokens', postgresql.JSON(astext_type=sa.Text()), nullable=False),
     sa.Column('raw_text', sa.Text(), nullable=False),
@@ -33,16 +33,16 @@ def upgrade():
     )
     op.create_table('predict_data',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('child_id', sa.Integer(), nullable=False),
-    sa.Column('parent_id', sa.Integer(), nullable=False),
-    sa.Column('url', sa.String(length=255), nullable=True),
+    sa.Column('child_id', sa.String(length=255), nullable=False),
+    sa.Column('parent_id', sa.String(length=255), nullable=False),
+    sa.Column('log_id', sa.String(length=255), nullable=True),
+    sa.Column('url', sa.Text(), nullable=False),
     sa.Column('label', sa.String(length=255), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('url')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('url_classification',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('url', sa.String(length=255), nullable=True),
+    sa.Column('url', sa.Text(), nullable=True),
     sa.Column('label', sa.String(length=255), nullable=False),
     sa.Column('stopword_removed_tokens', postgresql.JSON(astext_type=sa.Text()), nullable=False),
     sa.PrimaryKeyConstraint('id'),

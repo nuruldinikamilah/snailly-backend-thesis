@@ -1,6 +1,7 @@
 from src.repositories.PredictDataRepository import PredictDataRepository
 from src.repositories.UrlClassificationRepository import UrlClassificationRepository
 from src.repositories.CleanDataRepository import CleanDataRepository
+from src.config.config import API_SNAILLY
 from src.utils.convert import queryResultToDict
 from src.services.Service import Service
 from src.utils.errorHandler import errorHandler
@@ -19,6 +20,8 @@ import warnings
 import traceback
 warnings.filterwarnings('ignore')
 import ast
+import requests
+from urllib.parse import urlparse
 
 predictDataRepository = PredictDataRepository()
 urlClassificationRepository = UrlClassificationRepository()
@@ -35,6 +38,59 @@ class PredictDataService(Service):
     
     def __init__(self):
         self.svm_model, self.tfidf_vectorizer = self._load_model()
+
+    def sendLog(self, token, childId, parentId, url, log_id=None):
+        log_url = API_SNAILLY+"/log"
+        
+        parsed = urlparse(url)
+        hostname = parsed.hostname   # buat web_title
+        link = url                   # full URL tetap dikirim ke backend
+
+        payload = {
+            "childId": childId,
+            "url": link,                     # wajib full URL valid
+            "parentId": parentId,
+            "web_title": hostname,           # hostname aja, bukan full URL
+            "web_description": "",
+            "detail_url": link               # isi dengan full URL, bukan ""
+        }
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        try:
+            res = requests.post(log_url, json=payload, headers=headers)
+            print("Response status:", res.status_code)
+            print("Response text:", res.text)  
+            res.raise_for_status()
+            data = res.json()
+            print(f"Log berhasil dikirim: {data}")
+            return data.get("data", {}).get("log_id")
+        except Exception as e:
+            traceback.print_exc()
+            print(f"Gagal kirim log: {e}")
+            return None
+
+
+    def sendNotification(self, childId, parentId, url, logId):
+        notif_url = API_SNAILLY+"/notification/send"
+        payload = {
+            "childId": childId,
+            "parentId": parentId,
+            "web_title": url,
+            "logId": logId
+        }
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            res = requests.post(notif_url, json=payload, headers=headers)
+            res.raise_for_status()
+            data = res.json()
+            print(f"Notifikasi berhasil dikirim: {data}")
+        except Exception as e:
+            traceback.print_exception()
+            print(f"Gagal kirim notifikasi: {e}")
 
     def _load_model(self):
         MODEL_PATH = "public/models"
@@ -83,18 +139,24 @@ class PredictDataService(Service):
         try:
             if self.svm_model is None or self.tfidf_vectorizer is None:
                 return self.failedOrSuccessRequest('failed', 500, "Model belum dimuat.")
-            
+            token = data.get("token")
             text = data.get('text', None)
+            child_id = data.get("child_id")
+            parent_id = data.get("parent_id")
+            url = data.get("url")
+
             if not text:
                 return self.failedOrSuccessRequest('failed', 404, 'No text provided')
-
+            log_id = self.sendLog(token, child_id, parent_id, url)
+            print(f"Log ID: {log_id}")
+            if not log_id:
+                return self.failedOrSuccessRequest('failed', 500, "Gagal mengirim log.")
             print(f"Memulai prediksi untuk teks: {text[:50]}...")  # log 50 karakter pertama
             # Transform harus dalam bentuk list
             X = self.tfidf_vectorizer.transform([text])
             
             predicted_labels = self.svm_model.predict(X).tolist()  # ubah ke list agar JSON-serializable
             predicted_proba = self.svm_model.predict_proba(X).tolist()
-
             print(f"Prediksi untuk teks: {predicted_labels}, Probabilitas: {predicted_proba}")
             predictDataRepository.createNewPredictData({
                 "text": text,
@@ -102,16 +164,23 @@ class PredictDataService(Service):
                 "predicted_proba": predicted_proba,
                 "url": data.get('url', None),
                 "parent_id": data.get('parent_id', None),
-                "child_id": data.get('child_id', None)
+                "child_id": data.get('child_id', None),
+                "log_id": log_id
             })
             existing_url_classification = urlClassificationRepository.getUrlClassificationByUrl(data.get('url', None))
-            if existing_url_classification:
-                print(f"{data.get('url', None)} sudah ada di database, SEND NOTIFICATION")
+            print(f"Existing URL classification: {existing_url_classification}")
+            if not existing_url_classification:
+                parsed = urlparse(url)
+                hostname = parsed.hostname
+                print(f"{data.get('url', None)} tidak ada di database, SEND NOTIFICATION")
+                self.sendNotification(child_id, parent_id, hostname, log_id)
+
             return self.failedOrSuccessRequest('success', 201, {
                 "labels": predicted_labels[0],
                 "probabilities": predicted_proba
             })
         except Exception as e:
+            traceback.print_exc()
             errorHandler(e)
             return self.failedOrSuccessRequest('failed', 500, str(e))
     
