@@ -9,6 +9,8 @@ from src.utils.errorHandler import errorHandler
 from src.utils.Preprocessing.TextProcessor import process_text
 import os # Pastikan os diimpor
 import json
+import traceback
+
 cleanDataRepository = CleanDataRepository()
 predictDataService = PredictDataService()
 
@@ -40,7 +42,6 @@ class CleanDataService(Service):
             url = data['url']
             parent_id = data['parent_id']
             child_id = data['child_id']
-
             # 1. Cek apakah URL sudah ada di database
             existing = cleanDataRepository.getCleanDataByUrl(url)
             if existing:
@@ -49,8 +50,9 @@ class CleanDataService(Service):
                 data_for_prediction = {
                     'text': existing_data['text'],
                     'url': existing_data['url'],
-                    'parent_id': existing_data['parent_id'],
-                    'child_id': existing_data['child_id']
+                    'parent_id': parent_id,
+                    'child_id': child_id,
+                    'token': data['token']
                 }
                 prediction_result = predictDataService.createPredictData(data_for_prediction)
                 if prediction_result['status'] == 'failed':
@@ -101,8 +103,6 @@ class CleanDataService(Service):
 
             # 4. Siapkan data untuk disimpan
             data_to_save = {
-                "child_id": child_id,
-                "parent_id": parent_id,
                 "url": url,
                 "text": clean_text, 
                 "raw_text": combined_text,
@@ -110,17 +110,25 @@ class CleanDataService(Service):
                 "link_gambar": image_links_str,
                 "folder_gambar": image_folder
             }
-            print(f"Data yang akan disimpan: {data_to_save}")
+            # print(f"Data yang akan disimpan: {data_to_save}")
             # 5. Panggil Repository untuk menyimpan
             new_record = cleanDataRepository.createNewCleanData(data_to_save)
-            record_dict = queryResultToDict([new_record])
-            prediction_result= predictDataService.createPredictData(record_dict[0])
+            record_dict = queryResultToDict([new_record])[0]
+            data_for_prediction = {
+                    'text': record_dict['text'],
+                    'url': record_dict['url'],
+                    'parent_id': parent_id,
+                    'child_id': child_id,
+                    'token': data['token']
+                }
+            prediction_result= predictDataService.createPredictData(data_for_prediction)
             if prediction_result['status'] == 'failed':
                 return self.failedOrSuccessRequest('failed', prediction_result['code'], prediction_result['data'])
             return self.failedOrSuccessRequest('success', prediction_result['code'], prediction_result['data'])
         except ValueError as e:
-            return self.failedOrSuccessRequest('failed', 400, str(e)) # Bad request (misal: data tidak lengkap)
+            traceback.print_exc()
+            return self.failedOrSuccessRequest('failed', 400, f"Terjadi kesalahan internal: {e}") # Bad request (misal: data tidak lengkap)
         except Exception as e:
             # Tangani error umum lainnya
-            print(f"ERROR di CleanDataService: {e}")
+            traceback.print_exc()
             return self.failedOrSuccessRequest('failed', 500, f"Terjadi kesalahan internal: {e}")

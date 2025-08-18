@@ -10,6 +10,7 @@ class PredictDataRepository:
     new_predict_data = predict_data(
       child_id=data['child_id'],
       parent_id=data['parent_id'],
+      log_id=data.get('log_id'),  #
       url=data['url'],
       label=data['label']
     )

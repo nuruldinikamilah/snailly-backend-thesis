@@ -1,5 +1,7 @@
 from src.models.UrlClassification import url_classification,db
 from src.repositories.CleanDataRepository import CleanDataRepository
+import pandas as pd
+import ast # Tambahkan import ini untuk konversi string ke list
 
 cleanDataRepository = CleanDataRepository()
 
@@ -35,3 +37,29 @@ class UrlClassificationRepository:
     db.session.delete(url_classification_to_delete)
     db.session.commit()
     return url_classification_to_delete
+
+  def createSeedDataset(self, seed_dataframe: pd.DataFrame):
+      new_records_count = 0
+      print(seed_dataframe)
+      for index, row in seed_dataframe.iterrows():
+          url = row.get('url')
+          if not url:
+              continue # Lewati baris jika tidak ada URL
+          existing_record = self.getUrlClassificationByUrl(url)
+          if existing_record:
+              print(f"Melewatkan (sudah ada): {url}")
+              continue
+          tokens_str = row.get('stopword_removed_tokens')
+          new_record = url_classification(
+              url=url,
+              label=row.get('label'),
+              stopword_removed_tokens=tokens_str
+          )
+          db.session.add(new_record)
+          new_records_count += 1
+      
+      if new_records_count > 0:
+          print(f"Menyimpan {new_records_count} data baru ke database...")
+          db.session.commit()
+      
+      return new_records_count

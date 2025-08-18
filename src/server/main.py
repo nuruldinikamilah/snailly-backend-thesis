@@ -14,6 +14,10 @@ CORS(main_app)
 db = database(main_app)
 migrate = Migrate(main_app, db)
 
+@main_app.route('/')
+def index():
+    return "Welcome to the Snailly API"
+
 print("Server is running on url: " + BASE_URL + ":", PORT)
 if __name__ == "__main__":
     main_app.run(debug=DEBUG, host=BASE_URL, port=PORT)

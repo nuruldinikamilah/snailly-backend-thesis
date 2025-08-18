@@ -7,13 +7,11 @@ class CleanDataRepository:
     return clean_data.query.filter_by(url=url).first()
   
   def createNewCleanData(self,data):
-    required_keys = {'child_id', 'parent_id', 'url', 'text', 'link_gambar'}
+    required_keys = {'url', 'text', 'stopword_removed_tokens'}
     if not required_keys.issubset(data.keys()):
         raise ValueError(f"Data tidak lengkap untuk membuat CleanData. Butuh: {required_keys}")
 
     new_clean_data = clean_data(
-        child_id=data['child_id'],
-        parent_id=data['parent_id'],
         url=data['url'],
         text=data['text'],
         raw_text=data['raw_text'],
