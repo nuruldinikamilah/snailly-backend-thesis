@@ -10,9 +10,9 @@ MainApp = Blueprint('MainApp', __name__,)
 cleanDataService =  CleanDataService()
 predictDataService = PredictDataService()
 hitlService = HITLService()
-@MainApp.route('/test', methods=['GET'])
+@MainApp.route('/test', methods=['POST'])
 def test():
-    return Response.success([],"Test endpoint is working")
+    return Response.success([],"Test post endpoint is working")
 
 @MainApp.route('/scrapping', methods=['POST'])
 def clean_data():

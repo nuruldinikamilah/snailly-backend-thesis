@@ -108,7 +108,7 @@ class PredictDataService(Service):
             if existing_url_classification:
                 print(f"{data.get('url', None)} sudah ada di database, SEND NOTIFICATION")
             return self.failedOrSuccessRequest('success', 201, {
-                "labels": predicted_labels,
+                "labels": predicted_labels[0],
                 "probabilities": predicted_proba
             })
         except Exception as e:
