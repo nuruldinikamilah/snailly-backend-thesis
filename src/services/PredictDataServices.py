@@ -73,13 +73,14 @@ class PredictDataService(Service):
             return None
 
 
-    def sendNotification(self, childId, parentId, url, logId):
+    def sendNotification(self, childId, predictId,parentId, url, logId):
         notif_url = API_SNAILLY+"/notification/send"
         payload = {
             "childId": childId,
             "parentId": parentId,
             "web_title": url,
-            "logId": logId
+            "logId": logId,
+            "predict_id": predictId
         }
         headers = {"Content-Type": "application/json"}
 
@@ -158,7 +159,7 @@ class PredictDataService(Service):
             predicted_labels = self.svm_model.predict(X).tolist()  # ubah ke list agar JSON-serializable
             predicted_proba = self.svm_model.predict_proba(X).tolist()
             print(f"Prediksi untuk teks: {predicted_labels}, Probabilitas: {predicted_proba}")
-            predictDataRepository.createNewPredictData({
+            predictData =  predictDataRepository.createNewPredictData({
                 "text": text,
                 "label": predicted_labels[0],
                 "predicted_proba": predicted_proba,
@@ -167,13 +168,15 @@ class PredictDataService(Service):
                 "child_id": data.get('child_id', None),
                 "log_id": log_id
             })
+            predictDataDict = queryResultToDict([predictData])[0]
             existing_url_classification = urlClassificationRepository.getUrlClassificationByUrl(data.get('url', None))
             print(f"Existing URL classification: {existing_url_classification}")
             if not existing_url_classification:
                 parsed = urlparse(url)
                 hostname = parsed.hostname
+                predict_id = predictDataDict.get('id', None)
                 print(f"{data.get('url', None)} tidak ada di database, SEND NOTIFICATION")
-                self.sendNotification(child_id, parent_id, hostname, log_id)
+                self.sendNotification(child_id, predict_id, parent_id, hostname, log_id)
 
             return self.failedOrSuccessRequest('success', 201, {
                 "labels": predicted_labels,
