@@ -80,7 +80,7 @@ class PredictDataService(Service):
             "parentId": parentId,
             "web_title": url,
             "logId": logId,
-            "predictId": predictId
+            "predictId": str(predictId)
         }
         headers = {"Content-Type": "application/json"}
 

@@ -49,8 +49,7 @@ def update_label():
     data = request.json
     id = data.get('id')
     new_label = data.get('new_label')
-
-    result = hitlService.updatePredictLabelById(id, new_label)
+    result = hitlService.updatePredictLabelById(int(id), new_label)
     if(result['status'] == 'failed'):
         return Response.error(result['data'],result['code'])
     return Response.success(result['data'],"success update label")
