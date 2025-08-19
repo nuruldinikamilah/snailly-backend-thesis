@@ -23,7 +23,9 @@ class PredictDataRepository:
     return predict_data.query.get(id)
   def getPredictDataByUrl(self, url):
     return predict_data.query.filter_by(url=url).first()
-  
+  def getPredictDataByLogId(self, log_id):
+    return predict_data.query.filter_by(log_id=log_id).first()
+
   def updatePredictLabelById(self, predict_id, new_label):
     predict_data_to_update = self.getPredictDataById(predict_id)
     if not predict_data_to_update:
@@ -31,6 +33,14 @@ class PredictDataRepository:
     predict_data_to_update.label = new_label
     db.session.commit()
     return predict_data_to_update
+
+  def updatePredictLabelByLogid(self, log_id, new_label):
+    updated_predict_data = self.getPredictDataByLogId(log_id)
+    if not updated_predict_data:
+      return None
+    updated_predict_data.label = new_label
+    db.session.commit()
+    return updated_predict_data
 
   def updatePredictData(self, id, data):
     predict_data_to_update = predict_data.query.get(id)

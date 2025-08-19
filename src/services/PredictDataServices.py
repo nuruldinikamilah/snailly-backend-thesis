@@ -80,8 +80,9 @@ class PredictDataService(Service):
             "parentId": parentId,
             "web_title": url,
             "logId": logId,
-            "predictId": predictId
+            "predictId": str(predictId)
         }
+        print(f"Payload Send Notification {payload}")
         headers = {"Content-Type": "application/json"}
 
         try:
@@ -90,7 +91,7 @@ class PredictDataService(Service):
             data = res.json()
             print(f"Notifikasi berhasil dikirim: {data}")
         except Exception as e:
-            traceback.print_exception()
+            traceback.print_exc()
             print(f"Gagal kirim notifikasi: {e}")
 
     def _load_model(self):
@@ -169,12 +170,14 @@ class PredictDataService(Service):
                 "log_id": log_id
             })
             predictDataDict = queryResultToDict([predictData])[0]
+            print(predictDataDict)
             existing_url_classification = urlClassificationRepository.getUrlClassificationByUrl(data.get('url', None))
             print(f"Existing URL classification: {existing_url_classification}")
             if not existing_url_classification:
                 parsed = urlparse(url)
                 hostname = parsed.hostname
                 predict_id = predictDataDict.get('id', None)
+                print(f"Predict ID: {predict_id}")
                 print(f"{data.get('url', None)} tidak ada di database, SEND NOTIFICATION")
                 self.sendNotification(child_id, predict_id, parent_id, hostname, log_id)
 
@@ -184,7 +187,6 @@ class PredictDataService(Service):
             })
         except Exception as e:
             traceback.print_exc()
-            errorHandler(e)
             return self.failedOrSuccessRequest('failed', 500, str(e))
     
     def getMajorityLabel(self):

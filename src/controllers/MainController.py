@@ -53,7 +53,18 @@ def update_label():
     id = data.get('id')
     new_label = data.get('new_label')
 
-    result = hitlService.updatePredictLabelById(id, new_label)
+    result = hitlService.updatePredictLabelById(int(id), new_label)
+    if(result['status'] == 'failed'):
+        return Response.error(result['data'],result['code'])
+    return Response.success(result['data'],"success update label")
+
+@MainApp.route('/update-label-logid', methods=['PUT'])
+def update_label_logid():
+    data = request.json
+    log_id = data.get('log_id')
+    new_label = data.get('new_label')
+
+    result = hitlService.updatePredictLabelByLogId(log_id, new_label)
     if(result['status'] == 'failed'):
         return Response.error(result['data'],result['code'])
     return Response.success(result['data'],"success update label")

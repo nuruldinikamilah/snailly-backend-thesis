@@ -30,8 +30,13 @@ class HITLService(Service):
             return self.failedOrSuccessRequest('success', 200, 'Data berhasil diperbarui')
         except Exception as e:
             return self.failedOrSuccessRequest('failed', 500, str(e))
-        
-    
+
+    def updatePredictLabelByLogId(self, log_id, new_label):
+        updated_predict_data = predictDataRepository.updatePredictLabelByLogId(log_id, new_label)
+        if not updated_predict_data:
+            return self.failedOrSuccessRequest('failed', 404, 'Data tidak ditemukan')
+        return self.failedOrSuccessRequest('success', 200, 'Data berhasil diperbarui')
+
     def createSeedDataset(self):
         try:
             # Langkah 1: Baca data dari CSV
