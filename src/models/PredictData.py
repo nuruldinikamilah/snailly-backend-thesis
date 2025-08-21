@@ -10,6 +10,8 @@ class predict_data(db.Model):
   log_id = db.Column(db.Text)
   url = db.Column(db.Text, nullable=False)
   label = db.Column(db.String(255), nullable=False)
+  created_at = db.Column(db.DateTime, server_default=db.func.now())
+  updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
   def __init__(self, child_id, parent_id, log_id, url, label):
     self.child_id = child_id

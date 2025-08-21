@@ -125,7 +125,7 @@ def caption_images_in_folder(
         print(f"Tidak ada gambar yang ditemukan di folder '{image_folder_path}'")
         return pd.DataFrame()
     print(f"Ditemukan {len(image_files)} gambar di folder '{image_folder_path}'")
-    captions = generate_captions_parallel(image_files, max_workers=5)
+    captions = generate_captions_parallel(image_files, max_workers=10)
     print(f"Ditemukan {len(captions)} gambar. Memulai proses captioning...")
     print(captions)
 
