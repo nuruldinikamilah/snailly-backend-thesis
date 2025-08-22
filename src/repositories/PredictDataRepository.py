@@ -62,9 +62,11 @@ class PredictDataRepository:
     return predict_data_to_delete
   
   def deletePredictDataByUrl(self, url):
-    predict_data_to_delete = self.getPredictDataByUrl(url)
-    if not predict_data_to_delete:
-      return None
-    db.session.delete(predict_data_to_delete)
-    db.session.commit()
-    return predict_data_to_delete
+      predict_data_to_delete = predict_data.query.filter_by(url=url).all()
+      if not predict_data_to_delete:
+          return None
+      
+      for record in predict_data_to_delete:
+          db.session.delete(record)
+      db.session.commit()
+      return predict_data_to_delete

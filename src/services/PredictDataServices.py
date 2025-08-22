@@ -250,7 +250,8 @@ class PredictDataService(Service):
                             })
                             
                             # Setelah data dipindahkan ke dataset training final, hapus dari data prediksi sementara
-                            predictDataRepository.deletePredictDataByUrl(url)
+                            delete = predictDataRepository.deletePredictDataByUrl(url)
+                            print(f"Data prediksi sementara untuk URL {url} telah dihapus: {delete}")
                         else:
                             # 3b. Jika TIDAK ditemukan, beri peringatan dan lewati URL ini
                             print(f"PERINGATAN: Tidak ditemukan data teks di 'clean_data' untuk URL {url}. "
